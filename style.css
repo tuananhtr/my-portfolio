@@ -1,0 +1,456 @@
+/* --- 1. RESET & BASICS --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #111;
+    line-height: 1.4;
+    background-color: #fff;
+    scroll-behavior: smooth;
+}
+a { text-decoration: none; color: inherit; transition: 0.3s; }
+ul { list-style: none; }
+
+/* --- 2. NAVIGATION BAR --- */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 10%;
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 800;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+.logo {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #59AC77; 
+}
+.nav-links li { display: inline-block; margin-left: 40px; }
+.nav-links a {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #333;
+}
+.nav-links a:hover { color: #59AC77; }
+
+/* --- 3. HERO SECTION --- */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10%;
+    min-height: 70vh;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+.hero-text { flex: 1; padding-right: 80px; max-width: 1500px; }
+.hero-text h1 { font-size: 3rem; font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
+.highlight { color: #59AC77; font-weight: 700; }
+.sub-text { font-size: 1.2rem; color: #333; }
+
+.hero-image-container { flex: 1; display: flex; justify-content: flex-end; position: relative; }
+.image-wrapper { position: relative; width: 350px; height: 400px; }
+.image-bg-box {
+    position: absolute; top: -20px; left: -20px; width: 100%; height: 100%;
+    background: linear-gradient(135deg, #59AC77, #E67E22);
+    z-index: -1; border-radius: 4px;
+}
+.profile-pic {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 10px 10px 20px rgba(0,0,0,0.1);
+    filter: grayscale(45%);
+}
+
+/* --- 4. PROJECTS SECTION --- */
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 60px;
+    color: #111;
+}
+.projects-section {
+    padding: 80px 10%;
+    background-color: #fff;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 60px;
+    margin-top: 20px;
+    /* max-width: 200px; */
+}
+
+/* The Card Container */
+.project-card { cursor: pointer; }
+
+.project-card {
+    cursor: pointer;
+    
+    /* --- ADD THESE 3 LINES --- */
+    width: 100%;        /* Allows it to be responsive on small screens */
+    max-width: 400px;   /* The LIMIT: It will never get wider than 400px */
+    margin: 0 auto;     /* Centers the card if the screen is wider than 400px */
+}
+
+/* The Top Colored Box part */
+.card-visual {
+    height: 300px;
+    position: relative;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+}
+.project-card:hover .card-visual {
+    transform: translateY(-5px);
+}
+
+/* Details inside the colored box (Number & Date) */
+.card-tag {
+    position: absolute;
+    top: -35px;
+    left: 0px;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 1px solid #000;
+}
+.card-date {
+    position: absolute;
+    top: -35px;
+    right: 0px;
+    color: black;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+/* The inner image/graphic */
+.card-graphic {
+    width: 35%;
+    height: auto;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+}
+
+/* Text Below the Card */
+.card-info { padding-top: 20px; }
+.card-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #111;
+}
+.card-desc {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* Unique Colors for each card */
+.bg-yellow { background-color: #fce83a; }
+.bg-purple { background-color: #ff00ff; }
+.bg-beige { background-color: #f3d2b3; }
+
+/* --- NEW CENTERED CONTACT PAGE --- */
+
+.contact-page-centered {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 20px 100px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* 1. Header & Icons */
+.page-title-center {
+    text-align: center;
+    font-weight: 300; /* Thinner, elegant font like the image */
+    font-size: 2.8rem;
+    color: #111;
+    margin-bottom: 20px;
+}
+
+.social-icons-row {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.social-icons-row a {
+    font-size: 1.8rem; /* Size of icons */
+    color: #333;       /* Black icons */
+    margin: 0 12px;    /* Space between icons */
+    transition: color 0.3s;
+}
+
+.social-icons-row a:hover {
+    color: #59AC77;    /* Turns green on hover */
+}
+
+/* 2. Intro Text */
+.intro-text-center {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 60px auto; /* Centered with space below */
+    line-height: 1.6;
+    color: #555;
+    font-size: 1.05rem;
+}
+
+.intro-text-center a {
+    color: #555;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+/* 3. Form Styling */
+.clean-form {
+    max-width: 100%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    gap: 30px; /* Space between First and Last name */
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    color: #333;
+}
+
+.req {
+    font-size: 0.85rem;
+    color: #999;
+    font-weight: normal;
+    margin-left: 5px;
+}
+
+.form-group input, 
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc; /* Light grey border */
+    border-radius: 2px;     /* Slight rounding */
+    font-size: 1rem;
+    font-family: inherit;
+    background-color: #fafafa;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus {
+    outline: none;
+    border-color: #59AC77; /* Green highlight when clicking */
+    background-color: #fff;
+}
+
+/* Submit Button */
+.btn-submit {
+    background-color: #333;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #59AC77;
+}
+
+/* Mobile: Stack the name fields */
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr; /* Stack vertically on phones */
+        gap: 0;
+    }
+}
+
+/* Button Style */
+.btn-primary {
+    display: inline-block;
+    background-color: #333;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #59AC77; /* Turns green on hover */
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .hero { flex-direction: column-reverse; text-align: center; padding-top: 40px; }
+    .hero-text { padding-right: 0; margin-top: 50px; }
+    .hero-image-container { justify-content: center; }
+    .nav-links { display: none; }
+}
+
+/* --- ABOUT PAGE STYLES --- */
+
+.about-page {
+    width: 100%;
+    max-width: 1000px; /* Limits the width of the whole content */
+    margin: 0 auto;    /* Centers it */
+    padding: 40px 20px 100px;
+}
+
+/* 1. The Large Image */
+.about-hero-image {
+    width: 80%;
+    height: auto; /* Fixed height for a cinematic look */
+    /* margin-bottom: 60px; */
+    margin: 0 auto 60px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.about-hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures image covers the area nicely */
+    object-position: center 20%; /* Adjust this % to move the image up/down */
+}
+
+/* 2. Text Formatting */
+.about-content {
+    max-width: 750px; /* Keeps text column narrower for readability */
+    margin: 0 auto;   /* Centers the text column */
+}
+
+.about-headline {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 40px;
+}
+
+.about-content p {
+    font-size: 1.1rem;
+    line-height: 1.8; /* Good spacing between lines */
+    color: #444;
+    margin-bottom: 30px; /* Space between paragraphs */
+}
+
+/* Pink/Green Highlights in text */
+.highlight-text {
+    font-weight: bold;
+    color: #59AC77; /* Using your Green brand color */
+}
+
+/* 3. The Résumé Button (Outline Style) */
+.resume-container {
+    margin-top: 50px;
+}
+
+.btn-resume {
+    display: inline-block;
+    padding: 12px 40px;
+    border: 2px solid #59AC77; /* Green Border */
+    color: #59AC77;            /* Green Text */
+    font-weight: 700;
+    text-transform: capitalize;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    background-color: transparent;
+}
+
+.btn-resume:hover {
+    background-color: #59AC77; /* Fills with green on hover */
+    color: white;              /* Text turns white */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .about-hero-image {
+        height: 300px; /* Smaller image on phones */
+    }
+    .about-headline {
+        font-size: 1.5rem;
+    }
+}
+
+/* --- LET'S CONNECT SECTION --- */
+.connect-section {
+    text-align: center;
+    padding: 80px 20px;
+    background-color: #fff;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 1. Title (Serif Font like the image) */
+.connect-title {
+    font-family: 'Georgia', 'Times New Roman', serif; /* Serif font for elegance */
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #111;
+    margin-bottom: 20px;
+}
+
+/* 2. Subtext */
+.connect-text {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+/* 3. Email Link */
+.connect-email {
+    display: block; /* Puts it on its own line */
+    font-size: 1.2rem;
+    color: #59AC77; /* Your Brand Green */
+    font-weight: bold;
+    margin-bottom: 40px;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.connect-email:hover {
+    color: #333;
+    text-decoration: underline;
+}
+
+/* 4. Social Icons */
+.connect-icons {
+    display: flex;
+    justify-content: center;
+    gap: 30px; /* Space between icons */
+}
+
+.connect-icons a {
+    color: #000; /* Black icons like the image */
+    font-size: 1.8rem;
+    transition: transform 0.3s, color 0.3s;
+}
+
+.connect-icons a:hover {
+    color: #59AC77; /* Turns green on hover */
+    transform: translateY(-5px); /* Floats up slightly */
+}

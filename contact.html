@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - Andy Trinh</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Andy Trinh</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="contact.html" style="color: #59AC77;">Contact</a></li>
+        </ul>
+    </nav>
+
+    <div class="contact-page-centered">
+        
+        <h1 class="page-title-center">Andy Trinh's Contact</h1>
+        
+        <div class="social-icons-row">
+            <a href="https://www.linkedin.com/in/anhtuantrinh216/" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <a href="https://github.com/tuananhtr" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="mailto:trinhtuananh.work@gmail.com"><i class="fas fa-envelope"></i></a>
+        </div>
+
+        <p class="intro-text-center">
+            If you want more info about my <a href="#">data science projects</a>, please let me know. Thanks for visiting!
+        </p>
+
+        <form action="https://formspree.io/f/maqdewlz" method="POST" class="clean-form">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name <span class="req">(required)</span></label>
+                    <input type="text" name="firstname" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="req">(required)</span></label>
+                    <input type="text" name="lastname" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address <span class="req">(required)</span></label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Subject <span class="req">(required)</span></label>
+                <input type="text" name="subject" required>
+            </div>
+
+            <div class="form-group">
+                <label>Message <span class="req">(required)</span></label>
+                <textarea name="message" rows="6" required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">Submit</button>
+
+        </form>
+
+    </div>
+
+</body>
+</html>

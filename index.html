@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Andy Trinh</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </nav>
+
+    <header id="home" class="hero">
+        <div class="hero-text">
+            <h1>
+                I’m Andy Trinh, a Data Science Master student at <span class="highlight">KU Leuven</span>. 
+                I enjoy solving real life problems using Data Science.
+            </h1>
+            <p class="sub-text">
+                7 years of experience in <span class="highlight">Data Analytics</span> and <span class="highlight">Business Consultant</span>
+            </p>
+        </div>
+        <div class="hero-image-container">
+            <div class="image-wrapper">
+                <div class="image-bg-box"></div>
+                <img src="assets/rome.jpeg" alt="Profile Photo" class="profile-pic">
+            </div>
+        </div>
+    </header>
+
+    <section id="projects" class="projects-section">
+        <h2 class="section-title">My Projects</h2>
+        <div class="projects-grid">
+            
+            <div class="project-card">
+                <div class="card-visual bg-yellow">
+                    <span class="card-tag">#213</span>
+                    <span class="card-date">DEC 2025</span>
+                    <img src="https://img.icons8.com/ios-filled/100/ffffff/musical-notes.png" class="card-graphic" alt="Music">
+                </div>
+                <div class="card-info">
+                    <h3 class="card-title">Musical Motifs</h3>
+                    <p class="card-desc">Visualizing how musicals use motifs to tell stories using Python and D3.js.</p>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="card-visual bg-purple">
+                    <span class="card-tag">#212</span>
+                    <span class="card-date">NOV 2025</span>
+                    <img src="https://img.icons8.com/ios-filled/100/ffffff/bar-chart.png" class="card-graphic" alt="Chart">
+                </div>
+                <div class="card-info">
+                    <h3 class="card-title">Democracy Data</h3>
+                    <p class="card-desc">Every time someone said 'democracy' in Congress. A text analysis project.</p>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="card-visual bg-beige">
+                    <span class="card-tag">#211</span>
+                    <span class="card-date">OCT 2025</span>
+                    <img src="https://img.icons8.com/ios-filled/100/ffffff/walking.png" class="card-graphic" alt="Walk">
+                </div>
+                <div class="card-info">
+                    <h3 class="card-title">Walkachusetts</h3>
+                    <p class="card-desc">A visually-aided journal of a very long walk home across the state.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="projects.html" class="btn-primary">View All Projects</a>
+        </div>
+    </section>
+    
+    <section class="connect-section">
+        <h2 class="connect-title">Let's Connect</h2>
+        <p class="connect-text">
+            Feel free to reach out for collaborations or just a friendly hello 👋
+        </p>
+
+        <div class="connect-icons">
+            <a href="https://github.com/tuananhtr" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://www.linkedin.com/in/anhtuantrinh216/" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+            <a href="mailto:trinhtuananh.work@gmail.com"><i class="fas fa-envelope"></i></a>
+        </div>
+    </section>
+
+</body>
+</html>
