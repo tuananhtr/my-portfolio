@@ -487,7 +487,7 @@ nav {
         flex-direction: row; /* Keep them in a row */
         flex-wrap: nowrap;   /* Force them NOT to break lines */
         justify-content: center;
-        gap: 8px;            /* Smaller gaps */
+        gap: 6px;            /* Smaller gaps */
         margin-top: 15px;
     }
 
