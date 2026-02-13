@@ -483,10 +483,16 @@ nav {
     }
     
     .nav-links {
-        margin-top: 20px;
+        display: flex;
+        flex-direction: row; /* Keep them in a row */
+        flex-wrap: nowrap;   /* Force them NOT to break lines */
         justify-content: center;
-        gap: 15px; /* Smaller gap between links */
-        flex-wrap: wrap; /* Allow links to wrap if needed */
+        gap: 8px;            /* Smaller gaps */
+        margin-top: 15px;
+    }
+
+    .nav-links li a {
+        font-size: 0.8rem;   /* Smaller text size to fit screen */
     }
 
     /* 2. Fix the Projects Grid */
