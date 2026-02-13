@@ -389,12 +389,26 @@ nav {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .about-hero-image {
-        height: 300px; /* Smaller image on phones */
+
+    nav {
+        flex-direction: column;
+        
+        /* --- ADD THESE 2 LINES --- */
+        height: auto;       /* Lets the box grow tall enough to fit the links */
+        padding-bottom: 20px; /* Adds space so links don't touch the image */
     }
-    .about-headline {
-        font-size: 1.5rem;
+
+    .nav-links {
+        margin-top: 20px;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        
+        /* Ensure display is set to flex so they don't hide */
+        display: flex; 
     }
+
+    /* ... keep the rest of your mobile code ... */
 }
 
 /* --- LET'S CONNECT SECTION --- */
