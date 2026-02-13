@@ -455,3 +455,55 @@ nav {
     color: #59AC77; /* Turns green on hover */
     transform: translateY(-5px); /* Floats up slightly */
 }
+
+/* ========================================= */
+/* MOBILE RESPONSIVENESS RULES         */
+/* ========================================= */
+
+@media (max-width: 768px) {
+
+    /* 1. Fix the Navigation Bar */
+    nav {
+        flex-direction: column; /* Stack logo and links vertically */
+        padding: 20px;
+    }
+    
+    .nav-links {
+        margin-top: 20px;
+        justify-content: center;
+        gap: 15px; /* Smaller gap between links */
+        flex-wrap: wrap; /* Allow links to wrap if needed */
+    }
+
+    /* 2. Fix the Projects Grid */
+    .projects-grid {
+        /* Force 1 column on mobile */
+        grid-template-columns: 1fr; 
+        gap: 40px;
+    }
+
+    /* 3. Fix the About Page Image */
+    .about-hero-image {
+        width: 100%; /* Make image full width on phone */
+        height: auto;
+    }
+
+    /* 4. Reduce Giant Text Size */
+    h1, .about-headline {
+        font-size: 2rem; /* Shrink big titles */
+    }
+    
+    p {
+        font-size: 1rem; /* Make paragraph text readable */
+    }
+
+    /* 5. Tame the Padding (Space) */
+    .about-page, .connect-section, section {
+        padding: 40px 20px; /* Less white space on top/bottom */
+    }
+    
+    /* 6. Fix "Let's Connect" Icons */
+    .connect-icons {
+        gap: 20px; /* Bring icons closer together */
+    }
+}
