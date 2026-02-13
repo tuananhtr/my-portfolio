@@ -329,6 +329,7 @@ nav {
     margin: 0 auto 60px;
     border-radius: 4px;
     overflow: hidden;
+    filter: grayscale(45%);
 }
 
 .about-hero-image img {
