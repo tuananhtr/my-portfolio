@@ -527,3 +527,28 @@ nav {
         gap: 20px; /* Bring icons closer together */
     }
 }
+
+/* Container for the interactive map */
+.project-map-container {
+    width: 100%;
+    margin-bottom: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background-color: #f9f9f9; /* Light background while map loads */
+}
+
+/* The actual iframe window */
+.project-map-container iframe {
+    width: 100%;
+    height: 600px; /* Makes the map nice and tall */
+    border: none;  /* Removes the ugly default browser border */
+    display: block;
+}
+
+/* Make map slightly shorter on mobile screens */
+@media (max-width: 768px) {
+    .project-map-container iframe {
+        height: 400px; 
+    }
+}
