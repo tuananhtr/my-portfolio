@@ -529,26 +529,67 @@ nav {
 }
 
 /* Container for the interactive map */
-.project-map-container {
-    width: 100%;
-    margin-bottom: 40px;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    background-color: #f9f9f9; /* Light background while map loads */
+/* ========================================= */
+/* PROJECT PAGE (MATCHING ABOUT PAGE FORMAT) */
+/* ========================================= */
+
+.project-page-container {
+    max-width: 800px; /* Forces the narrow, clean look of your About page */
+    margin: 0 auto;
+    padding: 40px 20px 100px;
 }
 
-/* The actual iframe window */
-.project-map-container iframe {
-    width: 100%;
-    height: 600px; /* Makes the map nice and tall */
-    border: none;  /* Removes the ugly default browser border */
-    display: block;
+.back-link {
+    display: inline-block;
+    color: #666;
+    text-decoration: none;
+    margin-bottom: 20px;
+    font-weight: bold;
 }
 
-/* Make map slightly shorter on mobile screens */
-@media (max-width: 768px) {
-    .project-map-container iframe {
-        height: 400px; 
-    }
+.back-link:hover {
+    color: #59AC77;
+}
+
+.project-map-wrapper {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.project-map-wrapper iframe {
+    width: 100%;
+    height: 550px;
+    border: none;
+    border-radius: 8px; /* Softens the edges of the map */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Light shadow so it pops */
+}
+
+.project-headline {
+    font-size: 2.2rem; /* Big and bold */
+    color: #111;
+    margin-bottom: 15px;
+    line-height: 1.2;
+}
+
+.project-tags {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.project-text p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 20px;
 }
