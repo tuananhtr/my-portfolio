@@ -534,7 +534,7 @@ nav {
 /* ========================================= */
 
 .project-page-container {
-    max-width: 800px; /* Forces the narrow, clean look of your About page */
+    max-width: 1000px; /* Forces the narrow, clean look of your About page */
     margin: 0 auto;
     padding: 40px 20px 100px;
 }
