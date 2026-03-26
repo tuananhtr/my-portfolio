@@ -10,7 +10,7 @@ from datetime import datetime, timedelta # <--- NEW: Added timedelta for date ma
 # --- CONFIGURATION ---
 NUM_PAGES_TO_SCAN = 20 # <--- RECOMMENDED: Lowered to 20. 300 pages is overkill for just 1 day of data!
 CHROME_VERSION = 144    
-DB_URL = r"sqlite:///C:\Users\Admin\Desktop\my_portfolio\my-portfolio\real_estate_crawl\bds_data.db"
+DB_URL = r"sqlite:///real_estate_crawl/bds_data.db"
 
 # Initialize the database engine
 engine = create_engine(DB_URL)
@@ -197,7 +197,7 @@ def main():
     options = uc.ChromeOptions()
     
     # --- THE FIX: Tell it exactly which Chrome version you have ---
-    driver = uc.Chrome(options=options, version_main=146)
+    driver = uc.Chrome(options=options)
     
     driver.set_page_load_timeout(45)
 
