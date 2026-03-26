@@ -1,0 +1,45 @@
+name: Daily Real Estate Crawler
+
+on:
+  schedule:
+    # This runs at 01:00 UTC every day (which is 08:00 AM Vietnam Time)
+    - cron: '0 1 * * *'
+  workflow_dispatch: # This adds a button to let you trigger it manually for testing
+
+jobs:
+  crawl-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allows the bot to commit the new database back to your repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Virtual Display (For Selenium)
+        run: sudo apt-get install -y xvfb
+
+      - name: Run Crawler
+        # We use xvfb-run to trick Chrome into thinking there is a monitor connected
+        run: xvfb-run --auto-servernum python real_estate_crawl/bds_crawler.py
+
+      - name: Export JSON Data
+        run: python real_estate_crawl/export_data.py
+
+      - name: Commit and Push New Data
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add real_estate_crawl/bds_data.db real_estate_crawl/hcm_real_estate_data.json
+          # Only commit if there are actually changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated daily market data update" && git push)
