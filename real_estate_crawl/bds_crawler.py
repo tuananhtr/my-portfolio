@@ -1,35 +1,46 @@
 import time
 import random
+import os
+import re
 import pandas as pd
 import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
-import re 
 from sqlalchemy import create_engine
-from datetime import datetime, timedelta # <--- NEW: Added timedelta for date math
+from datetime import datetime, timedelta
 
-# --- CONFIGURATION ---
-NUM_PAGES_TO_SCAN = 20 # <--- RECOMMENDED: Lowered to 20. 300 pages is overkill for just 1 day of data!
-CHROME_VERSION = 144    
-DB_URL = r"sqlite:///real_estate_crawl/bds_data.db"
+# ==========================================
+# --- 1. SETUP & CONFIGURATION ---
+# ==========================================
 
-# Initialize the database engine
+# Dynamically set file paths so it works on any computer or cloud server
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(SCRIPT_DIR, "bds_data.db")
+JSON_EXPORT_PATH = os.path.join(SCRIPT_DIR, "hcm_real_estate_data.json") 
+
+DB_URL = f"sqlite:///{DB_PATH}"
 engine = create_engine(DB_URL)
 
-# --- NEW: Helper function to check if a date is exactly D-1 ---
+NUM_PAGES_TO_SCAN = 20 # Perfect for daily D-1 crawling
+
+# ==========================================
+# --- 2. HELPER FUNCTIONS ---
+# ==========================================
+
 def is_yesterday(date_str):
     if not date_str or date_str == "N/A": 
         return False
         
     date_str = date_str.lower()
-    yesterday = datetime.now() - timedelta(days=1)
     
-    # Check for relative Vietnamese terms
+    # GitHub servers run on UTC. Shift time to UTC+7 for Vietnam!
+    vn_time = datetime.utcnow() + timedelta(hours=7)
+    yesterday = vn_time - timedelta(days=1)
+    
     if "hôm qua" in date_str:
         return True
     if "hôm nay" in date_str or "giờ" in date_str or "phút" in date_str:
-        return False # It's today's data, skip it
+        return False 
         
-    # Check for standard DD/MM/YYYY format
     match = re.search(r'(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})', date_str)
     if match:
         day = match.group(1).zfill(2)
@@ -39,7 +50,6 @@ def is_yesterday(date_str):
         return parsed_date == yesterday.strftime("%d/%m/%Y")
         
     return False
-
 
 def get_listing_urls(driver, page_num):
     base_url = "https://batdongsan.com.vn/ban-can-ho-chung-cu-tp-hcm"
@@ -75,44 +85,30 @@ def parse_detail_page(driver, url):
         driver.get(url)
         time.sleep(random.uniform(3, 6))
     except Exception:
-        print("Error loading page")
+        print("Error loading page (Timeout)")
         return None
     
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     html = driver.page_source
     
+    # Use Vietnam Time for the timestamp
+    vn_now = datetime.utcnow() + timedelta(hours=7)
+    
     info = {
-        "dt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-        "URL": url,
-        "Title": "N/A",
-        "Product_ID": "N/A",  
-        "Price_Raw": "N/A",   
-        "Price_per_m2": "N/A",
-        "Area_Raw": "N/A",    
-        "Posted_Date": "N/A", 
-        "Address": "N/A",
-        "Latitude": "N/A",    
-        "Longitude": "N/A",   
-        "Bedrooms": "N/A",
-        "Bathrooms": "N/A",
-        "Direction": "N/A",
-        "Balcony": "N/A",
-        "Legal": "N/A",
-        "Project_Name": "N/A",
-        "Project_Developer": "N/A",
+        "dt": vn_now.strftime("%Y-%m-%d %H:%M:%S"), 
+        "URL": url, "Title": "N/A", "Product_ID": "N/A", "Price_Raw": "N/A",   
+        "Price_per_m2": "N/A", "Area_Raw": "N/A", "Posted_Date": "N/A", 
+        "Address": "N/A", "Latitude": "N/A", "Longitude": "N/A",   
+        "Bedrooms": "N/A", "Bathrooms": "N/A", "Direction": "N/A",
+        "Balcony": "N/A", "Legal": "N/A", "Project_Name": "N/A", "Project_Developer": "N/A",
     }
 
-    # 1. Basic Title
     title_elem = soup.select_one('.pr-title') or soup.select_one('.re__pr-title')
-    if title_elem:
-        info['Title'] = title_elem.text.strip()
+    if title_elem: info['Title'] = title_elem.text.strip()
 
-    # 2. Extract Address
     address_elem = soup.select_one('.js__pr-address') or soup.select_one('.re__pr-short-description')
-    if address_elem:
-        info['Address'] = address_elem.text.strip()
+    if address_elem: info['Address'] = address_elem.text.strip()
 
-    # 3. Features 
     spec_items = soup.select('.re__pr-specs-content-item')
     for item in spec_items:
         title_span = item.select_one('.re__pr-specs-content-item-title')
@@ -130,7 +126,6 @@ def parse_detail_page(driver, url):
             elif "hướng ban công" in label: info['Balcony'] = value
             elif "pháp lý" in label: info['Legal'] = value
 
-    # Posted Date
     short_infos = soup.select('.re__pr-short-info-item')
     for item in short_infos:
         title = item.select_one('.title')
@@ -138,12 +133,10 @@ def parse_detail_page(driver, url):
         if title and value and "ngày đăng" in title.text.strip().lower():
             info['Posted_Date'] = value.text.strip()
             
-    # 4. Project Info
     project_box = soup.select_one('.re__project-infor')
     if not project_box:
         headers = soup.find_all(['h3', 'div'], string=re.compile('Thông tin dự án'))
-        if headers:
-            project_box = headers[0].find_parent('div', class_=re.compile('project')) or headers[0].parent
+        if headers: project_box = headers[0].find_parent('div', class_=re.compile('project')) or headers[0].parent
 
     if project_box:
         p_name = project_box.select_one('.re__project-title') or project_box.find('div', class_=re.compile('title'))
@@ -160,14 +153,11 @@ def parse_detail_page(driver, url):
             if "bàn giao" in full_text.lower() or "xây dựng" in full_text.lower():
                 info['Project_Status'] = full_text 
 
-    # 5. Longitude / Latitude
     lat_match = re.search(r'latitude\s*:\s*([0-9\.]+)', html)
     long_match = re.search(r'longitude\s*:\s*([0-9\.]+)', html)
-    
     if lat_match: info['Latitude'] = lat_match.group(1)
     if long_match: info['Longitude'] = long_match.group(1)
 
-    # 6. Hidden Raw Values
     pid_match = re.search(r'productId\s*:\s*(\d+)', html)
     if pid_match: info['Product_ID'] = pid_match.group(1)
 
@@ -183,8 +173,11 @@ def parse_detail_page(driver, url):
     print(f"Parsed. Date: {info.get('Posted_Date', 'Unknown')}")
     return info
 
-def main():
-    # --- STEP 1: LOAD PREVIOUS PROGRESS FROM DATABASE ---
+# ==========================================
+# --- 3. MAIN WORKFLOWS ---
+# ==========================================
+
+def run_crawler():
     scraped_urls = set()
     try:
         existing_data = pd.read_sql("SELECT URL FROM listings", con=engine)
@@ -193,26 +186,25 @@ def main():
     except Exception:
         print("Database or 'listings' table not found. Starting fresh.")
 
-    print("Launching browser...")
+    print("Launching browser in Headless Mode...")
     options = uc.ChromeOptions()
     
-    # --- THE FIX: Tell it exactly which Chrome version you have ---
-    driver = uc.Chrome(options=options)
+    # REQUIRED FOR GITHUB ACTIONS: Headless and memory optimization flags
+    options.add_argument('--headless=new')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
     
+    driver = uc.Chrome(options=options)
     driver.set_page_load_timeout(45)
 
     all_urls = []
 
     try:
-        # Phase 1: Collect URLs
         for page in range(1, NUM_PAGES_TO_SCAN + 1):
             urls = get_listing_urls(driver, page)
             all_urls.extend(urls)
         
-        # Remove duplicates
         all_urls = list(set(all_urls))
-        
-        # Filter: Only keep URLs we haven't scraped yet
         urls_to_scrape = [u for u in all_urls if u not in scraped_urls]
         
         print(f"\n--- Total URLs found: {len(all_urls)}")
@@ -220,29 +212,24 @@ def main():
         print(f"--- Remaining to Scrape: {len(urls_to_scrape)}")
         
         if len(urls_to_scrape) == 0:
-            print("All items on these pages have already been scraped! Exiting.")
+            print("No new URLs to check! Exiting crawler.")
             return
 
         print("\nStarting Phase 2: Deep Crawling...")
 
-        # Phase 2: Visit each URL
         for i, link in enumerate(urls_to_scrape):
             print(f"[{i+1}/{len(urls_to_scrape)}] ", end="")
             try:
                 details = parse_detail_page(driver, link)
                 
                 if details:
-                    # --- NEW: Check if the post is exactly D-1 ---
                     if not is_yesterday(details.get("Posted_Date")):
                         print(" -> Skipped (Not D-1)")
-                        continue # Skip to the next URL without saving
+                        continue 
                     
                     print(" -> Valid D-1. Saving...")
                     
-                    # --- STEP 2: SAVE IMMEDIATELY TO DATABASE ---
                     df_row = pd.DataFrame([details])
-                    
-                    # Enforce column order and drop unused keys
                     cols = [
                         "dt", "Title", "Address", "Price", "Product_ID", "Price_Raw", 
                         "Latitude", "Longitude", "Area_Raw", "Price_per_m2", 
@@ -252,14 +239,12 @@ def main():
                     ]
                     final_cols = [c for c in cols if c in df_row.columns]
                     df_row = df_row[final_cols]
-                    
-                    # Append to SQLite safely
                     df_row.to_sql('listings', con=engine, if_exists='append', index=False)
                     
             except Exception as e:
                 print(f"Error saving data: {e}")
                 if "invalid session" in str(e).lower():
-                    print("Browser Session Lost. Stopping script. Run again to resume.")
+                    print("Browser Session Lost. Stopping script.")
                     break
                 continue
 
@@ -268,7 +253,26 @@ def main():
             driver.quit()
         except:
             pass
-        print(f"\nScript stopped. Data is safely stored in '{DB_URL}'")
+        print(f"\nCrawler stopped. Data safely stored in '{DB_PATH}'")
+
+def export_database():
+    print(f"\n--- Starting JSON Export ---")
+    print(f"Reading database from: {DB_PATH}")
+    
+    try:
+        query = "SELECT * FROM listings" 
+        df = pd.read_sql(query, con=engine)
+        
+        df = df.dropna(subset=['Latitude', 'Longitude', 'Price_per_m2'])
+        df['Price_per_m2'] = pd.to_numeric(df['Price_per_m2'], errors='coerce')
+        df = df[df['Price_per_m2'] < 500000000]
+        
+        df.to_json(JSON_EXPORT_PATH, orient="records", force_ascii=False, indent=4)
+        print(f"Success! Exported {len(df)} cleaned rows to {JSON_EXPORT_PATH}")
+        
+    except Exception as e:
+        print(f"An error occurred during export: {e}")
 
 if __name__ == "__main__":
-    main()
+    run_crawler()
+    export_database()
