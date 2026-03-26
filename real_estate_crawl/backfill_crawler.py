@@ -5,40 +5,52 @@ import undetected_chromedriver as uc
 from bs4 import BeautifulSoup
 import re 
 from sqlalchemy import create_engine
-from datetime import datetime, timedelta # <--- NEW: Added timedelta for date math
+from datetime import datetime, timedelta
 
-# --- CONFIGURATION ---
-NUM_PAGES_TO_SCAN = 20 # <--- RECOMMENDED: Lowered to 20. 300 pages is overkill for just 1 day of data!
-CHROME_VERSION = 144    
+# ==========================================
+# --- BACKFILL CONFIGURATION ---
+# ==========================================
+
+# 1. Type the exact dates you want to backfill here (Format: DD/MM/YYYY)
+TARGET_DATES = ["21/03/2026","22/03/2026","23/03/2026"]
+
+# 2. Set this HIGH (e.g., 100-200) because old posts are buried deep!
+NUM_PAGES_TO_SCAN = 100 
+
 DB_URL = r"sqlite:///C:\Users\Admin\Desktop\my_portfolio\my-portfolio\real_estate_crawl\bds_data.db"
+# ==========================================
 
-# Initialize the database engine
 engine = create_engine(DB_URL)
 
-# --- NEW: Helper function to check if a date is exactly D-1 ---
-def is_yesterday(date_str):
+def is_target_date(date_str, target_dates):
+    """Checks if the scraped date matches any date in your TARGET_DATES list"""
     if not date_str or date_str == "N/A": 
         return False
         
     date_str = date_str.lower()
-    yesterday = datetime.now() - timedelta(days=1)
     
-    # Check for relative Vietnamese terms
-    if "hôm qua" in date_str:
-        return True
+    # Calculate what today and yesterday actually are in DD/MM/YYYY
+    today_str = datetime.now().strftime("%d/%m/%Y")
+    yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%d/%m/%Y")
+    
+    parsed_date = ""
+    
+    # Convert Vietnamese relative terms to actual dates
     if "hôm nay" in date_str or "giờ" in date_str or "phút" in date_str:
-        return False # It's today's data, skip it
-        
-    # Check for standard DD/MM/YYYY format
-    match = re.search(r'(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})', date_str)
-    if match:
-        day = match.group(1).zfill(2)
-        month = match.group(2).zfill(2)
-        year = match.group(3)
-        parsed_date = f"{day}/{month}/{year}"
-        return parsed_date == yesterday.strftime("%d/%m/%Y")
-        
-    return False
+        parsed_date = today_str
+    elif "hôm qua" in date_str:
+        parsed_date = yesterday_str
+    else:
+        # Extract standard DD/MM/YYYY formats
+        match = re.search(r'(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})', date_str)
+        if match:
+            day = match.group(1).zfill(2)
+            month = match.group(2).zfill(2)
+            year = match.group(3)
+            parsed_date = f"{day}/{month}/{year}"
+            
+    # Check if the calculated date is in your target list
+    return parsed_date in target_dates
 
 
 def get_listing_urls(driver, page_num):
@@ -69,13 +81,14 @@ def get_listing_urls(driver, page_num):
     print(f"Found {len(links)} links on page {page_num}.")
     return links
 
+
 def parse_detail_page(driver, url):
     print(f"Crawling: {url} ... ", end="")
     try:
         driver.get(url)
         time.sleep(random.uniform(3, 6))
     except Exception:
-        print("Error loading page")
+        print("Error loading page (Timeout/Broken)")
         return None
     
     soup = BeautifulSoup(driver.page_source, 'html.parser')
@@ -83,45 +96,26 @@ def parse_detail_page(driver, url):
     
     info = {
         "dt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-        "URL": url,
-        "Title": "N/A",
-        "Product_ID": "N/A",  
-        "Price_Raw": "N/A",   
-        "Price_per_m2": "N/A",
-        "Area_Raw": "N/A",    
-        "Posted_Date": "N/A", 
-        "Address": "N/A",
-        "Latitude": "N/A",    
-        "Longitude": "N/A",   
-        "Bedrooms": "N/A",
-        "Bathrooms": "N/A",
-        "Direction": "N/A",
-        "Balcony": "N/A",
-        "Legal": "N/A",
-        "Project_Name": "N/A",
-        "Project_Developer": "N/A",
+        "URL": url, "Title": "N/A", "Product_ID": "N/A", "Price_Raw": "N/A",   
+        "Price_per_m2": "N/A", "Area_Raw": "N/A", "Posted_Date": "N/A", 
+        "Address": "N/A", "Latitude": "N/A", "Longitude": "N/A",   
+        "Bedrooms": "N/A", "Bathrooms": "N/A", "Direction": "N/A",
+        "Balcony": "N/A", "Legal": "N/A", "Project_Name": "N/A", "Project_Developer": "N/A",
     }
 
-    # 1. Basic Title
     title_elem = soup.select_one('.pr-title') or soup.select_one('.re__pr-title')
-    if title_elem:
-        info['Title'] = title_elem.text.strip()
+    if title_elem: info['Title'] = title_elem.text.strip()
 
-    # 2. Extract Address
     address_elem = soup.select_one('.js__pr-address') or soup.select_one('.re__pr-short-description')
-    if address_elem:
-        info['Address'] = address_elem.text.strip()
+    if address_elem: info['Address'] = address_elem.text.strip()
 
-    # 3. Features 
     spec_items = soup.select('.re__pr-specs-content-item')
     for item in spec_items:
         title_span = item.select_one('.re__pr-specs-content-item-title')
         value_span = item.select_one('.re__pr-specs-content-item-value')
-        
         if title_span and value_span:
             label = title_span.text.strip().lower()
             value = value_span.text.strip()
-            
             if "mức giá" in label or "khoảng giá" in label: info['Price'] = value
             elif "diện tích" in label: info['Area'] = value
             elif "phòng ngủ" in label: info['Bedrooms'] = value
@@ -130,7 +124,6 @@ def parse_detail_page(driver, url):
             elif "hướng ban công" in label: info['Balcony'] = value
             elif "pháp lý" in label: info['Legal'] = value
 
-    # Posted Date
     short_infos = soup.select('.re__pr-short-info-item')
     for item in short_infos:
         title = item.select_one('.title')
@@ -138,7 +131,6 @@ def parse_detail_page(driver, url):
         if title and value and "ngày đăng" in title.text.strip().lower():
             info['Posted_Date'] = value.text.strip()
             
-    # 4. Project Info
     project_box = soup.select_one('.re__project-infor')
     if not project_box:
         headers = soup.find_all(['h3', 'div'], string=re.compile('Thông tin dự án'))
@@ -153,52 +145,43 @@ def parse_detail_page(driver, url):
         if p_investor: info['Project_Developer'] = p_investor.text.strip()
 
         p_status = project_box.select_one('[class*="status"]')
-        if p_status:
-            info['Project_Status'] = p_status.text.strip()
-        else:
-            full_text = project_box.get_text(" | ", strip=True)
-            if "bàn giao" in full_text.lower() or "xây dựng" in full_text.lower():
-                info['Project_Status'] = full_text 
+        if p_status: info['Project_Status'] = p_status.text.strip()
 
-    # 5. Longitude / Latitude
     lat_match = re.search(r'latitude\s*:\s*([0-9\.]+)', html)
     long_match = re.search(r'longitude\s*:\s*([0-9\.]+)', html)
-    
     if lat_match: info['Latitude'] = lat_match.group(1)
     if long_match: info['Longitude'] = long_match.group(1)
 
-    # 6. Hidden Raw Values
     pid_match = re.search(r'productId\s*:\s*(\d+)', html)
     if pid_match: info['Product_ID'] = pid_match.group(1)
-
     price_match = re.search(r'price\s*:\s*(\d+)', html)
     if price_match: info['Price_Raw'] = price_match.group(1)
-
     m2_match = re.search(r'pricePerM2\s*:\s*(\d+)', html)
     if m2_match: info['Price_per_m2'] = m2_match.group(1)
-    
     area_match = re.search(r'area\s*:\s*(\d+)', html)
     if area_match: info['Area_Raw'] = area_match.group(1)
 
     print(f"Parsed. Date: {info.get('Posted_Date', 'Unknown')}")
     return info
 
+
 def main():
-    # --- STEP 1: LOAD PREVIOUS PROGRESS FROM DATABASE ---
+    print(f"=== BACKFILL SCRIPT INITIATED ===")
+    print(f"Target Dates to Backfill: {TARGET_DATES}")
+    
     scraped_urls = set()
     try:
         existing_data = pd.read_sql("SELECT URL FROM listings", con=engine)
         scraped_urls = set(existing_data["URL"].tolist())
-        print(f"RESUMING: Found {len(scraped_urls)} items already saved in the database.")
+        print(f"Found {len(scraped_urls)} total items already in the database.")
     except Exception:
-        print("Database or 'listings' table not found. Starting fresh.")
+        print("Database not found. Starting fresh.")
 
     print("Launching browser...")
     options = uc.ChromeOptions()
     
-    # --- THE FIX: Tell it exactly which Chrome version you have ---
+    # Chrome version fix included!
     driver = uc.Chrome(options=options, version_main=146)
-    
     driver.set_page_load_timeout(45)
 
     all_urls = []
@@ -209,40 +192,33 @@ def main():
             urls = get_listing_urls(driver, page)
             all_urls.extend(urls)
         
-        # Remove duplicates
         all_urls = list(set(all_urls))
-        
-        # Filter: Only keep URLs we haven't scraped yet
         urls_to_scrape = [u for u in all_urls if u not in scraped_urls]
         
-        print(f"\n--- Total URLs found: {len(all_urls)}")
-        print(f"--- Already Scraped: {len(scraped_urls)}")
-        print(f"--- Remaining to Scrape: {len(urls_to_scrape)}")
+        print(f"\n--- Total URLs found on {NUM_PAGES_TO_SCAN} pages: {len(all_urls)}")
+        print(f"--- Already in DB: {len(scraped_urls)}")
+        print(f"--- Remaining to Check: {len(urls_to_scrape)}")
         
         if len(urls_to_scrape) == 0:
-            print("All items on these pages have already been scraped! Exiting.")
+            print("No new URLs to check. Exiting.")
             return
 
-        print("\nStarting Phase 2: Deep Crawling...")
+        print("\nStarting Phase 2: Deep Crawling for Target Dates...")
 
-        # Phase 2: Visit each URL
         for i, link in enumerate(urls_to_scrape):
             print(f"[{i+1}/{len(urls_to_scrape)}] ", end="")
             try:
                 details = parse_detail_page(driver, link)
                 
                 if details:
-                    # --- NEW: Check if the post is exactly D-1 ---
-                    if not is_yesterday(details.get("Posted_Date")):
-                        print(" -> Skipped (Not D-1)")
-                        continue # Skip to the next URL without saving
+                    # --- THE BACKFILL FILTER ---
+                    if not is_target_date(details.get("Posted_Date"), TARGET_DATES):
+                        print(" -> Skipped (Not in target dates)")
+                        continue 
                     
-                    print(" -> Valid D-1. Saving...")
+                    print(" -> VALID TARGET DATE! Saving to DB...")
                     
-                    # --- STEP 2: SAVE IMMEDIATELY TO DATABASE ---
                     df_row = pd.DataFrame([details])
-                    
-                    # Enforce column order and drop unused keys
                     cols = [
                         "dt", "Title", "Address", "Price", "Product_ID", "Price_Raw", 
                         "Latitude", "Longitude", "Area_Raw", "Price_per_m2", 
@@ -252,14 +228,12 @@ def main():
                     ]
                     final_cols = [c for c in cols if c in df_row.columns]
                     df_row = df_row[final_cols]
-                    
-                    # Append to SQLite safely
                     df_row.to_sql('listings', con=engine, if_exists='append', index=False)
                     
             except Exception as e:
                 print(f"Error saving data: {e}")
                 if "invalid session" in str(e).lower():
-                    print("Browser Session Lost. Stopping script. Run again to resume.")
+                    print("Browser Session Lost. Stopping script.")
                     break
                 continue
 
@@ -268,7 +242,7 @@ def main():
             driver.quit()
         except:
             pass
-        print(f"\nScript stopped. Data is safely stored in '{DB_URL}'")
+        print(f"\nBackfill complete! Data stored in '{DB_URL}'")
 
 if __name__ == "__main__":
     main()
