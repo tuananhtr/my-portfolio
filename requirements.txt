@@ -1,0 +1,4 @@
+pandas
+undetected-chromedriver
+beautifulsoup4
+sqlalchemy
