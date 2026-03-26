@@ -190,9 +190,9 @@ def run_crawler():
     options = uc.ChromeOptions()
     
     # REQUIRED FOR GITHUB ACTIONS: Headless and memory optimization flags
-    options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    # options.add_argument('--headless=new')
+    # options.add_argument('--no-sandbox')
+    # options.add_argument('--disable-dev-shm-usage')
     
     # --- THE FIX: Automatically detect the server's Chrome version ---
     try:
