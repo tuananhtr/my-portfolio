@@ -194,7 +194,19 @@ def run_crawler():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     
-    driver = uc.Chrome(options=options)
+    # --- THE FIX: Automatically detect the server's Chrome version ---
+    try:
+        import subprocess
+        # Ask the Linux server for its Chrome version (e.g., "Google Chrome 145.0.x.x")
+        chrome_version_string = subprocess.check_output(['google-chrome', '--version']).decode('utf-8')
+        # Extract just the major number (e.g., 145)
+        major_version = int(chrome_version_string.split()[2].split('.')[0])
+    except Exception:
+        # Fallback just in case
+        major_version = 145 
+
+    driver = uc.Chrome(options=options, version_main=major_version)
+    # -----------------------------------------------------------------
     driver.set_page_load_timeout(45)
 
     all_urls = []
