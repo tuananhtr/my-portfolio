@@ -1,365 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HCMC Real Estate Market Dashboard</title>
     <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
         :root {
-            --bg-color: #0b0c10;
-            --card-bg: #111217;
-            --text-main: #ffffff;
-            --text-muted: #8b8d96;
-            --accent-orange: #ff471a; 
-            --border-color: #2a2c35;
+            --bg-body: #f3f4f6;
+            --bg-container: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-orange: #f59e0b;
+            --border-color: #e5e7eb;
         }
 
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Consolas', 'Courier New', monospace; 
-            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
-        .container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--bg-container);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
 
-        h1 { 
-            text-align: left; 
-            margin-bottom: 20px; 
-            color: var(--text-main); 
-            letter-spacing: 2px; 
-            text-transform: uppercase; 
-            font-size: 24px;
+        h1 {
+            text-align: left;
+            margin-bottom: 30px;
+            color: var(--text-main);
+            font-size: 28px;
+            font-weight: 700;
         }
 
         /* --- Grid Layout --- */
         .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 equal columns for the 3 KPIs */
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
             margin-bottom: 20px;
         }
 
         /* --- Cards --- */
         .card {
-            background-color: var(--card-bg);
+            background-color: var(--bg-container);
             border: 1px solid var(--border-color);
-            padding: 20px;
+            border-radius: 8px;
+            padding: 24px;
         }
 
-        .kpi-card { 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            position: relative; 
-        }
-        
-        /* Decorative corner squares */
-        .kpi-card::before, .kpi-card::after {
-            content: ''; 
-            position: absolute; 
-            width: 4px; 
-            height: 4px; 
-            background: var(--text-muted);
-        }
-        .kpi-card::before { top: -1px; left: -1px; }
-        .kpi-card::after { bottom: -1px; right: -1px; }
-
-        .kpi-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .kpi-value { font-size: 32px; font-weight: bold; color: var(--text-main); }
-        
         /* --- Chart Containers --- */
-        .chart-container-half { grid-column: span 2; height: auto; min-height: 450px; }
-        .chart-container-full { grid-column: span 3; height: auto; min-height: 600px; padding-bottom: 30px; }
+        .chart-container-half {
+            grid-column: span 2;
+            height: auto;
+            min-height: 450px;
+        }
+
+        .chart-container-full {
+            grid-column: span 3;
+            height: auto;
+            min-height: 600px;
+            padding-bottom: 30px;
+        }
 
         /* --- Controls --- */
-        .controls { margin-bottom: 15px; }
-        select {
-            padding: 8px 12px;
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        /* Custom combo-box */
+        .combo-box {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .combo-box input {
+            width: 100%;
+            padding: 10px 36px 10px 14px;
             font-size: 14px;
             border: 1px solid var(--border-color);
-            background-color: var(--bg-color);
+            border-radius: 6px;
+            background-color: var(--bg-container);
             color: var(--text-main);
-            width: 100%;
-            max-width: 300px;
-            cursor: pointer;
             font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .combo-box input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+
+        .combo-box .combo-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #9ca3af;
+            font-size: 10px;
+        }
+
+        .combo-box .combo-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            width: 100%;
+            max-height: 240px;
+            overflow-y: auto;
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .combo-box .combo-dropdown.open {
+            display: block;
+        }
+
+        .combo-box .combo-dropdown .combo-item {
+            padding: 9px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        .combo-box .combo-dropdown .combo-item:hover,
+        .combo-box .combo-dropdown .combo-item.active {
+            background-color: #fef3c7;
+            color: #92400e;
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h1>HCMC Apartment Market Overview</h1>
+    <div class="container">
+        <h1>HCMC Apartment Market Overview</h1>
 
-    <div class="dashboard-grid">
-        <div class="card kpi-card">
-            <div class="kpi-title">Total Processed Listings</div>
-            <div class="kpi-value" id="kpi-total">--</div>
-        </div>
-        <div class="card kpi-card">
-            <div class="kpi-title">Market Avg Price / m²</div>
-            <div class="kpi-value" id="kpi-price">--</div>
-        </div>
-        <div class="card kpi-card">
-            <div class="kpi-title">Total Projects Tracked</div>
-            <div class="kpi-value" id="kpi-projects">--</div>
-        </div>
+        <div class="dashboard-grid">
+            <div class="card chart-container-full">
+                <div class="controls">
+                    <label
+                        style="color: var(--text-muted); font-size: 13px; font-weight: 500; display: block; margin-bottom: 8px;">Analyze
+                        specific project:</label>
+                    <div class="combo-box" id="comboBox">
+                        <input type="text" id="comboInput" placeholder="Search or select a project..." value="ALL"
+                            autocomplete="off">
+                        <span class="combo-arrow">&#9660;</span>
+                        <div class="combo-dropdown" id="comboDropdown"></div>
+                    </div>
+                </div>
 
-        <div class="card chart-container-full">
-            <div class="controls">
-                <label for="projectSelect" style="color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 1px; margin-right: 10px;">Analyze specific project:</label>
-                <select id="projectSelect">
-                    <option value="ALL">All Market Data</option>
-                </select>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; width: 100%;">
+                    <div id="dailyChart" style="flex: 1; min-width: 400px; height: 500px;"></div>
+                    <div id="monthlyChart" style="flex: 1; min-width: 400px; height: 500px;"></div>
+                </div>
             </div>
-            
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; width: 100%;">
-                <div id="lineChart" style="flex: 1; min-width: 400px; height: 500px;"></div>
-                <div id="volumeChart" style="flex: 1; min-width: 400px; height: 500px;"></div>
-            </div>
-        </div>
 
-        <div class="card chart-container-full" style="width: 100%; overflow: hidden;">
-            <div id="mapChart" style="width: 100%; min-height: 600px;"></div>
+            <div class="card chart-container-full" style="width: 100%; overflow: hidden;">
+                <div id="mapChart" style="width: 100%; min-height: 600px;"></div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Format large numbers cleanly
-    const formatCurrency = (num) => new Intl.NumberFormat('vi-VN').format(Math.round(num));
+    <script>
+        // Format large numbers cleanly
+        const formatCurrency = (num) => new Intl.NumberFormat('vi-VN').format(Math.round(num));
 
-    // Fetch the JSON file generated by your Python script
-    // Note: Adjusted path to look inside your real_estate_crawl folder
-    fetch('../real_estate_crawl/hcm_real_estate_data.json')
-        .then(response => response.json())
-        .then(data => {
-            
-            // --- 1. DATA CLEANING & PREP ---
-            const cleanData = data.filter(d => d.Price_per_m2 > 0 && d.Latitude && d.Longitude);
+        // Fetch the JSON file generated by your Python script
+        // Note: Adjusted path to look inside your real_estate_crawl folder
+        fetch('../real_estate_crawl/hcm_real_estate_data.json')
+            .then(response => response.json())
+            .then(data => {
 
-            // --- 2. CALCULATE KPIs ---
-            let totalPriceM2 = 0;
-            let uniqueProjects = new Set();
+                // --- 1. DATA CLEANING & PREP ---
+                const cleanData = data.filter(d => d.Price_per_m2 > 0 && d.Latitude && d.Longitude);
 
-            cleanData.forEach(row => {
-                totalPriceM2 += Number(row.Price_per_m2) || 0;
-                
-                if (row.Project_Name && row.Project_Name !== "N/A") {
-                    uniqueProjects.add(row.Project_Name);
-                }
-            });
+                // --- 2. EXTRACT PROJECTS ---
+                let uniqueProjects = new Set();
 
-            document.getElementById('kpi-total').innerText = cleanData.length.toLocaleString();
-            document.getElementById('kpi-price').innerText = `${formatCurrency((totalPriceM2 / cleanData.length) / 1000000)} Tr`;
-            document.getElementById('kpi-projects').innerText = uniqueProjects.size.toLocaleString();
-
-            // --- 3. POPULATE DROPDOWN ---
-            const selectElement = document.getElementById('projectSelect');
-            Array.from(uniqueProjects).sort().forEach(name => {
-                let option = document.createElement('option');
-                option.value = name;
-                option.text = name;
-                selectElement.appendChild(option);
-            });
-
-            // Helper function to translate Vietnamese dates to YYYY-MM-DD
-            function parsePostedDate(dateStr) {
-                if (!dateStr || dateStr === "N/A") return null;
-                let str = dateStr.toLowerCase();
-                let today = new Date();
-
-                if (str.includes("hôm nay") || str.includes("giờ") || str.includes("phút")) {
-                    return today.toISOString().split('T')[0];
-                } else if (str.includes("hôm qua")) {
-                    let yesterday = new Date(today);
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    return yesterday.toISOString().split('T')[0];
-                } else {
-                    let match = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-                    if (match) {
-                        let day = match[1].padStart(2, '0');
-                        let month = match[2].padStart(2, '0');
-                        let year = match[3];
-                        return `${year}-${month}-${day}`;
+                cleanData.forEach(row => {
+                    if (row.Project_Name && row.Project_Name !== "N/A") {
+                        uniqueProjects.add(row.Project_Name);
                     }
-                }
-                return null;
-            }
-
-            // --- 4. DRAW LINE CHARTS (Price & Volume) ---
-            function updateLineChart(selectedProject) {
-                let filteredData = selectedProject === "ALL" 
-                    ? cleanData 
-                    : cleanData.filter(d => d.Project_Name === selectedProject);
-
-                // Group prices and counts by Date
-                let groupedByDate = {};
-                filteredData.forEach(d => {
-                    let date = parsePostedDate(d.Posted_Date);
-                    let rawPrice = Number(d.Price_Raw);
-                    let rawArea = Number(d.Area_Raw);
-                    
-                    if (!date || !rawPrice || !rawArea) return; 
-                    
-                    let calculatedPriceM2 = rawPrice / rawArea;
-                    
-                    if (!groupedByDate[date]) groupedByDate[date] = { sum: 0, count: 0 };
-                    
-                    groupedByDate[date].sum += calculatedPriceM2;
-                    groupedByDate[date].count += 1;
                 });
 
-                let dates = Object.keys(groupedByDate).sort();
-                let avgPrices = dates.map(date => groupedByDate[date].sum / groupedByDate[date].count);
-                let postCounts = dates.map(date => groupedByDate[date].count); 
+                // --- 3. POPULATE COMBO-BOX ---
+                const comboInput = document.getElementById('comboInput');
+                const comboDropdown = document.getElementById('comboDropdown');
+                const projectNames = ['ALL', ...Array.from(uniqueProjects).sort()];
 
-                // --- Chart 1: Price / m2 (Gray/White theme) ---
-                let tracePrice = {
-                    x: dates, y: avgPrices, type: 'scatter', mode: 'lines+markers',
-                    fill: 'tozeroy',                              // <-- Tells Plotly to fill down to the x-axis
-                    fillcolor: 'rgba(139, 141, 150, 0.15)',       // <-- A faint, transparent gray glow
-                    marker: { color: '#ffffff', size: 6 },
-                    line: { color: '#8b8d96', width: 2 },
-                    name: 'Avg Price'
-                };
+                function renderDropdown(filter) {
+                    comboDropdown.innerHTML = '';
+                    let query = (filter || '').toLowerCase();
+                    let matches = projectNames.filter(n => n.toLowerCase().includes(query));
+                    matches.forEach(name => {
+                        let div = document.createElement('div');
+                        div.className = 'combo-item';
+                        div.textContent = name === 'ALL' ? 'All Market Data' : name;
+                        div.dataset.value = name;
+                        div.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                            comboInput.value = this.dataset.value;
+                            comboDropdown.classList.remove('open');
+                            updateCharts(this.dataset.value);
+                        });
+                        comboDropdown.appendChild(div);
+                    });
+                }
 
-                let layoutPrice = {
-                    title: { text: 'Price Trend (VND / m²)', font: { color: '#ffffff' } },
-                    autosize: true, margin: { t: 40, b: 45, l: 80, r: 20 },
-                    xaxis: { gridcolor: '#2a2c35', tickangle: -45, tickfont: { color: '#8b8d96' } },
-                    yaxis: { gridcolor: '#2a2c35', tickfont: { color: '#8b8d96' } },
-                    plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
-                };
+                comboInput.addEventListener('focus', function () {
+                    renderDropdown(this.value === 'ALL' ? '' : this.value);
+                    comboDropdown.classList.add('open');
+                });
+                comboInput.addEventListener('input', function () {
+                    renderDropdown(this.value);
+                    comboDropdown.classList.add('open');
+                    updateCharts(this.value);
+                });
+                comboInput.addEventListener('blur', function () {
+                    comboDropdown.classList.remove('open');
+                });
 
-                Plotly.newPlot('lineChart', [tracePrice], layoutPrice, {responsive: true});
+                // Helper function to translate Vietnamese dates to YYYY-MM-DD
+                function parsePostedDate(dateStr) {
+                    if (!dateStr || dateStr === "N/A") return null;
+                    let str = dateStr.toLowerCase();
+                    let today = new Date();
 
-                // --- Chart 2: Listing Volume (Orange theme) ---
-                let traceVolume = {
-                    x: dates, y: postCounts, type: 'scatter', mode: 'lines+markers',
-                    fill: 'tozeroy', fillcolor: 'rgba(255, 71, 26, 0.1)',
-                    marker: { color: '#ff471a', size: 6 }, 
-                    line: { color: '#ff471a', width: 2 },
-                    name: '# of Listings'
-                };
-
-                let layoutVolume = {
-                    title: { text: 'Listing Volume Over Time', font: { color: '#ffffff' } },
-                    autosize: true, margin: { t: 40, b: 45, l: 50, r: 20 },
-                    xaxis: { gridcolor: '#2a2c35', tickangle: -45, tickfont: { color: '#8b8d96' } },
-                    yaxis: { gridcolor: '#2a2c35', tickfont: { color: '#8b8d96' } },
-                    plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
-                };
-
-                Plotly.newPlot('volumeChart', [traceVolume], layoutVolume, {responsive: true});
-            }
-
-            // --- 5. DRAW MAP ---
-            function drawMap() {
-                let latsHigh = [], lonsHigh = [], pricesHigh = [], sizesHigh = [], hoverHigh = [];
-                let latsLow = [], lonsLow = [], sizesLow = [], hoverLow = [];
-
-                cleanData.forEach(d => {
-                    let rawPrice = Number(d.Price_Raw);
-                    let rawArea = Number(d.Area_Raw);
-                    
-                    if (rawPrice > 0 && rawArea > 0 && d.Latitude && d.Longitude) {
-                        let calculatedPriceM2 = rawPrice / rawArea;
-                        
-                        // Ignore extreme fake data typos (e.g. anything over 500 Million VND/m2)
-                        if (calculatedPriceM2 <= 500000000) {
-                            
-                            let priceInTr = (calculatedPriceM2 / 1000000).toFixed(1);
-                            let name = d.Project_Name && d.Project_Name !== 'N/A' ? d.Project_Name : 'Listing';
-                            let hoverText = `<b>${name}</b><br>Price: ${priceInTr} Tr/m²`;
-
-                            if (calculatedPriceM2 > 60000000) {
-                                latsHigh.push(d.Latitude);
-                                lonsHigh.push(d.Longitude);
-                                pricesHigh.push(calculatedPriceM2);
-                                
-                                let scaledSize = (calculatedPriceM2 / 20000000); 
-                                sizesHigh.push(scaledSize > 30 ? 30 : (scaledSize < 6 ? 6 : scaledSize));
-                                
-                                hoverHigh.push(hoverText);
-                            } else {
-                                latsLow.push(d.Latitude);
-                                lonsLow.push(d.Longitude);
-                                sizesLow.push(6);
-                                hoverLow.push(hoverText);
-                            }
+                    if (str.includes("hôm nay") || str.includes("giờ") || str.includes("phút")) {
+                        return today.toISOString().split('T')[0];
+                    } else if (str.includes("hôm qua")) {
+                        let yesterday = new Date(today);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        return yesterday.toISOString().split('T')[0];
+                    } else {
+                        let match = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                        if (match) {
+                            let day = match[1].padStart(2, '0');
+                            let month = match[2].padStart(2, '0');
+                            let year = match[3];
+                            return `${year}-${month}-${day}`;
                         }
                     }
+                    return null;
+                }
+
+                // --- 4. DRAW COMBINED CHARTS (Daily & Monthly) ---
+                function updateCharts(selectedProject) {
+                    let filteredData = (!selectedProject || selectedProject === "ALL" || selectedProject === "")
+                        ? cleanData
+                        : cleanData.filter(d => d.Project_Name === selectedProject);
+
+                    // Group by Daily and Monthly
+                    let dailyData = {};
+                    let monthlyData = {};
+
+                    filteredData.forEach(d => {
+                        let date = parsePostedDate(d.Posted_Date);
+                        let rawPrice = Number(d.Price_Raw);
+                        let rawArea = Number(d.Area_Raw);
+
+                        if (!date || !rawPrice || !rawArea) return;
+
+                        let calculatedPriceM2 = rawPrice / rawArea;
+                        let month = date.substring(0, 7); // YYYY-MM
+
+                        if (!dailyData[date]) dailyData[date] = { sum: 0, count: 0 };
+                        dailyData[date].sum += calculatedPriceM2;
+                        dailyData[date].count += 1;
+
+                        if (!monthlyData[month]) monthlyData[month] = { sum: 0, count: 0 };
+                        monthlyData[month].sum += calculatedPriceM2;
+                        monthlyData[month].count += 1;
+                    });
+
+                    function createTracesAndLayout(dataMap, titleBase, isMonthly) {
+                        let keys = Object.keys(dataMap).sort();
+                        let avgPrices = keys.map(k => dataMap[k].sum / dataMap[k].count);
+                        let postCounts = keys.map(k => dataMap[k].count);
+
+                        // Format keys as readable dates — parse parts directly to avoid timezone shifts
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        let displayKeys = keys.map(k => {
+                            let parts = k.split('-');
+                            let monthIdx = parseInt(parts[1], 10) - 1;
+                            if (isMonthly) {
+                                return monthNames[monthIdx] + ' ' + parts[0];
+                            }
+                            return monthNames[monthIdx] + ' ' + parseInt(parts[2], 10);
+                        });
+
+                        let tracePrice = {
+                            x: displayKeys, y: avgPrices, type: 'bar',
+                            marker: { color: '#f59e0b' },
+                            name: 'Avg Price',
+                            yaxis: 'y1',
+                            offsetgroup: '1'
+                        };
+
+                        let traceVolume = {
+                            x: displayKeys, y: postCounts, type: 'bar',
+                            marker: { color: '#e5e7eb' },
+                            name: 'Listing Volume',
+                            yaxis: 'y2',
+                            offsetgroup: '2'
+                        };
+
+                        let layout = {
+                            title: {
+                                text: '<b>' + titleBase + '</b>',
+                                font: { family: 'Inter, sans-serif', color: '#111827', size: 15 },
+                                x: 0.01, xanchor: 'left',
+                                pad: { b: 0 }
+                            },
+                            autosize: true, margin: { t: 90, b: 90, l: 0, r: 60 },
+                            xaxis: { type: 'category', gridcolor: 'rgba(0,0,0,0)', tickangle: -45, tickfont: { color: '#9ca3af', size: 11 } },
+                            yaxis: { gridcolor: '#f3f4f6', zerolinecolor: '#e5e7eb', tickfont: { color: '#9ca3af', size: 11 }, tickprefix: '', showline: false },
+                            yaxis2: { overlaying: 'y', side: 'right', tickfont: { color: '#9ca3af', size: 11 }, showgrid: false, showline: false },
+                            plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)',
+                            showlegend: true, legend: { x: 0.01, y: 1.12, xanchor: 'left', orientation: 'h', font: { color: '#6b7280', size: 11 } },
+                            barmode: 'group',
+                            bargap: 0.15,
+                            bargroupgap: 0.05
+                        };
+
+                        return { traces: [tracePrice, traceVolume], layout: layout };
+                    }
+
+                    // Filter daily data to the latest month available in the data
+                    let allDailyDates = Object.keys(dailyData).sort();
+                    let latestMonth = allDailyDates.length > 0
+                        ? allDailyDates[allDailyDates.length - 1].substring(0, 7)
+                        : '';
+                    let mtdDailyData = {};
+                    allDailyDates.forEach(date => {
+                        if (date.startsWith(latestMonth)) {
+                            mtdDailyData[date] = dailyData[date];
+                        }
+                    });
+
+                    let daily = createTracesAndLayout(mtdDailyData, 'Price and Listing Volume (Month to Date)', false);
+                    Plotly.newPlot('dailyChart', daily.traces, daily.layout, { responsive: true });
+
+                    let monthly = createTracesAndLayout(monthlyData, 'Price and Listing Volume by Month', true);
+                    Plotly.newPlot('monthlyChart', monthly.traces, monthly.layout, { responsive: true });
+                }
+
+                // --- 5. DRAW MAP ---
+                function drawMap() {
+                    let latsHigh = [], lonsHigh = [], pricesHigh = [], sizesHigh = [], hoverHigh = [];
+                    let latsLow = [], lonsLow = [], sizesLow = [], hoverLow = [];
+
+                    cleanData.forEach(d => {
+                        let rawPrice = Number(d.Price_Raw);
+                        let rawArea = Number(d.Area_Raw);
+
+                        if (rawPrice > 0 && rawArea > 0 && d.Latitude && d.Longitude) {
+                            let calculatedPriceM2 = rawPrice / rawArea;
+
+                            // Ignore extreme fake data typos (e.g. anything over 500 Million VND/m2)
+                            if (calculatedPriceM2 <= 500000000) {
+
+                                let priceInTr = (calculatedPriceM2 / 1000000).toFixed(1);
+                                let name = d.Project_Name && d.Project_Name !== 'N/A' ? d.Project_Name : 'Listing';
+                                let hoverText = `<b>${name}</b><br>Price: ${priceInTr} Tr/m²`;
+
+                                if (calculatedPriceM2 > 60000000) {
+                                    latsHigh.push(d.Latitude);
+                                    lonsHigh.push(d.Longitude);
+                                    pricesHigh.push(calculatedPriceM2);
+
+                                    let scaledSize = (calculatedPriceM2 / 20000000);
+                                    sizesHigh.push(scaledSize > 30 ? 30 : (scaledSize < 6 ? 6 : scaledSize));
+
+                                    hoverHigh.push(hoverText);
+                                } else {
+                                    latsLow.push(d.Latitude);
+                                    lonsLow.push(d.Longitude);
+                                    sizesLow.push(6);
+                                    hoverLow.push(hoverText);
+                                }
+                            }
+                        }
+                    });
+
+                    // Trace for LOWER prices
+                    let traceLow = {
+                        type: 'scattermapbox', lat: latsLow, lon: lonsLow, mode: 'markers',
+                        marker: { size: sizesLow, color: '#f59e0b', opacity: 0.7 },
+                        text: hoverLow, hoverinfo: 'text'
+                    };
+
+                    // Trace for HIGHER prices
+                    let traceHigh = {
+                        type: 'scattermapbox', lat: latsHigh, lon: lonsHigh, mode: 'markers',
+                        marker: {
+                            size: sizesHigh, color: pricesHigh,
+                            colorscale: 'YlOrRd',
+                            cmin: 0, cmax: 500000000,
+                            showscale: false,
+                            opacity: 0.85
+                        },
+                        text: hoverHigh, hoverinfo: 'text'
+                    };
+
+                    let layoutMap = {
+                        title: {
+                            text: '<b>Ho Chi Minh City Apartment Price Heatmap</b>',
+                            font: { family: 'Inter, sans-serif', color: '#111827', size: 15 },
+                            x: 0.01, xanchor: 'left',
+                            pad: { b: 0 }
+                        },
+                        autosize: true, margin: { t: 50, b: 0, l: 0, r: 0 },
+                        mapbox: {
+                            style: 'carto-positron',
+                            center: { lat: 10.779047, lon: 106.707337 }, zoom: 10
+                        },
+                        showlegend: false,
+                        plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
+                    };
+
+                    Plotly.newPlot('mapChart', [traceLow, traceHigh], layoutMap, { responsive: true });
+                }
+
+                // --- INITIALIZATION ---
+                drawMap();
+                updateCharts("ALL");
+
+                // Event listener for search input
+                // Event listeners are already wired in the combo-box setup above.
+
+                // --- Force Plotly to resize when the window resizes ---
+                window.addEventListener('resize', function () {
+                    let mapDiv = document.getElementById('mapChart');
+                    let dailyDiv = document.getElementById('dailyChart');
+                    let monthlyDiv = document.getElementById('monthlyChart');
+
+                    if (mapDiv.data) Plotly.Plots.resize(mapDiv);
+                    if (dailyDiv.data) Plotly.Plots.resize(dailyDiv);
+                    if (monthlyDiv.data) Plotly.Plots.resize(monthlyDiv);
                 });
 
-                // Trace for LOWER prices (Bright Orange to match the image)
-                let traceLow = {
-                    type: 'scattermapbox', lat: latsLow, lon: lonsLow, mode: 'markers',
-                    marker: { size: sizesLow, color: '#ff471a', opacity: 0.9 },
-                    text: hoverLow, hoverinfo: 'text'
-                };
-
-                // Trace for HIGHER prices (Inferno colorscale fits dark themes perfectly)
-                // Trace for HIGHER prices (Inferno colorscale fits dark themes perfectly)
-                let traceHigh = {
-                    type: 'scattermapbox', lat: latsHigh, lon: lonsHigh, mode: 'markers',
-                    marker: {
-                        size: sizesHigh, color: pricesHigh,
-                        colorscale: 'Inferno', 
-                        cmin: 0, cmax: 500000000, 
-                        showscale: false, /* <-- Turned off the color bar here */
-                        opacity: 0.85
-                    },
-                    text: hoverHigh, hoverinfo: 'text'
-                };
-
-                let layoutMap = {
-                    title: { text: 'Ho Chi Minh City apartment price heatmap', font: {color: '#ffffff'} },
-                    autosize: true, margin: { t: 40, b: 0, l: 0, r: 0 },
-                    mapbox: {
-                        style: 'carto-darkmatter', 
-                        center: {lat: 10.779047, lon: 106.707337}, zoom: 10
-                    },
-                    showlegend: false,
-                    plot_bgcolor: 'rgba(0,0,0,0)', paper_bgcolor: 'rgba(0,0,0,0)'
-                };
-
-                Plotly.newPlot('mapChart', [traceLow, traceHigh], layoutMap, {responsive: true});
-            }
-
-            // --- INITIALIZATION ---
-            drawMap();
-            updateLineChart("ALL");
-
-            // Event listener for dropdown
-            selectElement.addEventListener('change', function() {
-                updateLineChart(this.value);
-            });
-
-            // --- Force Plotly to resize when the window resizes ---
-            window.addEventListener('resize', function() {
-                let mapDiv = document.getElementById('mapChart');
-                let lineDiv = document.getElementById('lineChart');
-                let volDiv = document.getElementById('volumeChart'); 
-                
-                if (mapDiv.data) Plotly.Plots.resize(mapDiv);
-                if (lineDiv.data) Plotly.Plots.resize(lineDiv);
-                if (volDiv.data) Plotly.Plots.resize(volDiv);        
-            });
-
-        })
-        .catch(error => console.error('Error loading JSON:', error));
-</script>
+            })
+            .catch(error => console.error('Error loading JSON:', error));
+    </script>
 
 </body>
+
 </html>
