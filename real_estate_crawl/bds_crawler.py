@@ -205,7 +205,12 @@ def run_crawler():
         # Fallback just in case
         major_version = 145 
 
-    driver = uc.Chrome(options=options, version_main=major_version)
+    try:
+        driver = uc.Chrome(options=options, version_main=major_version)
+    except Exception:
+        # Recreate options because uc.Chrome modifies them
+        fallback_options = uc.ChromeOptions()
+        driver = uc.Chrome(options=fallback_options)
     # -----------------------------------------------------------------
     driver.set_page_load_timeout(45)
 

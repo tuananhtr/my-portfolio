@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 # ==========================================
 
 # 1. Type the exact dates you want to backfill here (Format: DD/MM/YYYY)
-TARGET_DATES = ["21/03/2026","22/03/2026","23/03/2026"]
+TARGET_DATES = ['01/08/2026', '02/08/2026', '03/08/2026', '04/08/2026', '05/08/2026', '06/08/2026', '07/08/2026', '08/08/2026', '09/08/2026', '10/08/2026', '11/08/2026', '12/08/2026', '13/08/2026', '14/08/2026', '15/08/2026', '16/08/2026', '17/08/2026', '18/08/2026', '19/08/2026', '20/08/2026', '21/08/2026', '22/08/2026', '23/08/2026', '24/08/2026', '25/08/2026', '26/08/2026', '27/08/2026', '28/08/2026', '29/08/2026', '30/08/2026', '31/08/2026', '01/09/2026', '02/09/2026', '03/09/2026']
 
 # 2. Set this HIGH (e.g., 100-200) because old posts are buried deep!
 NUM_PAGES_TO_SCAN = 100 
@@ -180,8 +180,12 @@ def main():
     print("Launching browser...")
     options = uc.ChromeOptions()
     
-    # Chrome version fix included!
-    driver = uc.Chrome(options=options, version_main=146)
+    try:
+        driver = uc.Chrome(options=options)
+    except Exception:
+        # Recreate options since uc modifies them
+        fallback_options = uc.ChromeOptions()
+        driver = uc.Chrome(options=fallback_options)
     driver.set_page_load_timeout(45)
 
     all_urls = []
