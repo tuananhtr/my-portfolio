@@ -128,8 +128,10 @@ def parse_detail_page(driver, url):
     for item in short_infos:
         title = item.select_one('.title')
         value = item.select_one('.value')
-        if title and value and "ngày đăng" in title.text.strip().lower():
-            info['Posted_Date'] = value.text.strip()
+        if title and value:
+            title_clean = " ".join(title.text.split()).lower()
+            if "ngày đăng" in title_clean:
+                info['Posted_Date'] = value.text.strip()
             
     project_box = soup.select_one('.re__project-infor')
     if not project_box:
@@ -177,15 +179,29 @@ def main():
     except Exception:
         print("Database not found. Starting fresh.")
 
-    print("Launching browser...")
-    options = uc.ChromeOptions()
-    
+    # --- THE FIX: Automatically detect or fallback to correct Chrome version ---
     try:
-        driver = uc.Chrome(options=options)
+        import subprocess
+        # Ask the Linux server for its Chrome version
+        chrome_version_string = subprocess.check_output(['google-chrome', '--version']).decode('utf-8')
+        major_version = int(chrome_version_string.split()[2].split('.')[0])
+        versions_to_try = [major_version]
     except Exception:
-        # Recreate options since uc modifies them
-        fallback_options = uc.ChromeOptions()
-        driver = uc.Chrome(options=fallback_options)
+        # Fallback for Windows: try recent versions
+        versions_to_try = [154, 153, 152, 151, 150, 149, 148, 147, 146, 145]
+
+    driver = None
+    for v in versions_to_try:
+        try:
+            driver_options = uc.ChromeOptions()
+            driver = uc.Chrome(options=driver_options, version_main=v)
+            break
+        except Exception:
+            pass
+
+    if not driver:
+        print("Error: Could not initialize Chrome driver. Make sure Chrome is installed.")
+        return
     driver.set_page_load_timeout(45)
 
     all_urls = []
