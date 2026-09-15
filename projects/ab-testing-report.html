@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Testing Analysis | Andy Trinh</title>
+    <!-- Use FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Core Theme (matches personal portfolio) ── */
+        :root {
+            --green: #59AC77;
+            --orange: #E67E22;
+            --dark: #222222;
+            --mid: #555555;
+            --light: #777777;
+            --bg: #ffffff;
+            --bg-soft: #f8f9fa;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            
+            --ctrl: #3b82f6; /* Blue for control */
+            --test: #f97316; /* Orange for test */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-main);
+            color: var(--dark);
+            background-color: var(--bg);
+            line-height: 1.6;
+        }
+
+        /* ── Navigation ── */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        nav .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 24px;
+        }
+        nav .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        nav .nav-links a:hover { color: var(--green); }
+
+        /* ── Report Layout ── */
+        .report-page {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .report-hero {
+            margin-bottom: 48px;
+        }
+        .report-hero .tag {
+            display: inline-block;
+            background: rgba(89, 172, 119, 0.1);
+            color: var(--green);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .report-hero h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+        .report-hero p {
+            font-size: 1.05rem;
+            color: var(--mid);
+            max-width: 700px;
+            margin-bottom: 24px;
+        }
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 0.85rem;
+            color: var(--light);
+            font-weight: 600;
+        }
+        .report-meta i { margin-right: 6px; color: var(--mid); }
+
+        /* ── Sections ── */
+        .step { margin-bottom: 64px; }
+        .step-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .step-label .num {
+            background: var(--green);
+            color: white;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            margin-right: 8px;
+            font-size: 0.75rem;
+        }
+        .step h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 14px;
+        }
+        .step p {
+            font-size: 1rem;
+            color: var(--mid);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+        
+        /* ── Divider ── */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 64px 0;
+        }
+
+        /* ── Chart Placeholders ── */
+        .chart-placeholder {
+            width: 100%;
+            height: 350px;
+            background: var(--bg-soft);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 24px 0;
+        }
+
+        /* ── Stat test result table ── */
+        .stat-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin: 24px 0;
+        }
+        .stat-table thead th {
+            padding: 9px 12px;
+            background: var(--bg-soft);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--light);
+            border-bottom: 2px solid var(--border);
+            text-align: left;
+        }
+        .stat-table tbody td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--mid);
+        }
+        .stat-table tbody tr:last-child td { border-bottom: none; }
+        
+        .sig-no {
+            color: #999;
+            font-size: 0.78rem;
+            font-style: italic;
+        }
+        .sig-yes {
+            background: #fff3cd;
+            font-weight: 700;
+            color: #7a5700;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+        }
+
+        /* ── Recommendation cards ── */
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 24px;
+        }
+        .rec-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 20px;
+        }
+        .rec-card .rec-num {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--green);
+            opacity: 0.25;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .rec-card h4 {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        .rec-card p {
+            font-size: 0.85rem;
+            color: var(--mid);
+            line-height: 1.6;
+        }
+
+        /* ── Back link ── */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--green);
+            letter-spacing: 0.5px;
+            margin-bottom: 36px;
+            transition: gap 0.2s;
+            text-decoration: none;
+        }
+        .back-link:hover { gap: 12px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- ── Navigation ── -->
+    <nav>
+        <div class="logo"><a href="index.html" style="text-decoration:none;color:inherit;">Tuan Anh Trinh</a></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="projects.html" style="color:#59AC77;">Projects</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- ── Report Page ── -->
+    <main class="report-page">
+
+        <a href="projects.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> All Projects
+        </a>
+
+        <!-- ── Hero Banner ── -->
+        <div class="report-hero">
+            <div class="tag">A/B Testing · Marketing Analytics</div>
+            <h1>Marketing Campaign<br>A/B Test Analysis</h1>
+            <p>To measure the true impact of a new marketing strategy, a company must run a Test campaign simultaneously with a Control campaign. The Control group serves as a strict baseline, representing how users behave under the current standard strategy. Running both at the exact same time isolates the new strategy from outside variables such as seasonal trends, day-of-week fluctuations, or broader market shifts. This ensures that any observed changes in user behavior are caused directly by the campaign itself, not external factors.</p>
+            
+            <p>However, simply comparing the final metrics of these two campaigns is not enough. Daily marketing data is naturally volatile. Conducting an A/B testing helps separate the true signal from the noise, ensuring the company does not scale its budget based on random chance.</p>
+
+            <div class="report-meta">
+                <span><i class="fas fa-calendar-alt"></i> August 2019</span>
+                <span><i class="fas fa-database"></i> 30 days · 2 groups · 8 metrics</span>
+                <span><i class="fas fa-code"></i> Python · Pandas · SciPy</span>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP 1 — EDA Box Plots                     -->
+        <!-- ══════════════════════════════════════════ -->
+        <section class="step">
+            <div class="step-label"><span class="num">1</span> Distribution Analysis</div>
+            <h2>Campaign Behavior & Variance</h2>
+            
+            <div class="chart-container" style="text-align: center; margin: 24px 0;">
+                <img src="../assets/project2_box_plot.png" alt="Figure 1: Distribution Boxplots — Control vs Test" style="max-width: 100%; border-radius: var(--radius); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <p style="font-size: 0.85rem; color: var(--light); margin-top: 8px;">Figure 1: Distribution Boxplots — Control vs Test</p>
+            </div>
+
+            <p>Looking first at daily spend, the Test campaign operated on a consistently higher budget, with a median daily spend of $2,574 compared to Control's $2,289.</p>
+            <p>However, this increased budget did not translate into greater volume. The Test campaign generated fewer impressions and reached fewer unique users. Its distribution also reveals a much wider interquartile range (IQR), indicating that day-to-day reach was highly volatile compared to the stability of the Control group.</p>
+            <p>At the website click stage, the pattern shifts. Both distributions overlap considerably, with the Test campaign's median sitting slightly higher. Generating an equal or greater number of clicks from a significantly smaller pool of impressions indicates a much stronger click-through rate for the Test creatives.</p>
+            <p>Moving deeper into the funnel, the Control group establishes a clear advantage at the add-to-cart stage. The Control distribution sits entirely higher than Test, reflecting a persistent mid-funnel advantage rather than a few isolated spikes.</p>
+            <p>At the purchase step, the two distributions overlap almost perfectly, sharing the same median and spread. The compounding differences observed earlier in the funnel entirely cancel each other out by checkout.</p>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP 2 — Cost Efficiency                   -->
+        <!-- ══════════════════════════════════════════ -->
+        <section class="step">
+            <div class="step-label"><span class="num">2</span> Efficiency</div>
+            <h2>Cost Efficiency (CPM vs CPA)</h2>
+            <p>When evaluating overall cost efficiency, the Control campaign is superior at both ends of the funnel. It secures impressions at a significantly lower CPM ($20.86 compared to $34.36 for Test). This upfront efficiency translates directly into a cheaper final conversion. Ultimately, Control acquires a paying customer for a CPA of $4.38, while the Test campaign costs $4.92 per acquisition.</p>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP 3 — Line Plots                        -->
+        <!-- ══════════════════════════════════════════ -->
+        <section class="step">
+            <div class="step-label"><span class="num">3</span> Time Series</div>
+            <h2>Daily Metric Trends</h2>
+            <p>To look more detail at the comparison, we see the 7-day rolling average of these metrics.</p>
+            
+            <div class="chart-container" style="text-align: center; margin: 24px 0;">
+                <img src="../assets/project2_line_plot.png" alt="Figure 2: Rolling 7-day average — Control (Blue) vs Test (Orange)" style="max-width: 100%; border-radius: var(--radius); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <p style="font-size: 0.85rem; color: var(--light); margin-top: 8px;">Figure 2: Rolling 7-day average — Control (Blue) vs Test (Orange)</p>
+            </div>
+
+            <p>Spend tells a consistent story. Orange (Test) runs above blue (Control) for almost the entire month. There is no period where Control outspends Test. The gap is stable, not growing or shrinking.</p>
+            <p>Impressions and Reach show the opposite. Control (blue) sits higher throughout, and the gap is large. Control regularly reached 120,000–140,000 impressions on good days, while Test fluctuated more and peaked lower. The two metrics tell the same story, Control brought more reach, every day.</p>
+            <p>Website Clicks is where the separation breaks down. The two lines cross repeatedly throughout August, with neither group holding a clear advantage for long. Both hover in a similar range. This is the first metric where the campaigns perform at roughly the same level, despite the impression gap seen earlier.</p>
+            <p>Purchases brings everything back to parity. The two lines are almost inseparable. They cross constantly, in both directions, with no consistent leader.</p>
+            <p>Taken together, the line plots trace a clear pattern: Control dominates at the top of the funnel, both campaigns converge in the middle, and they arrive at virtually the same outcome at the bottom.</p>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP 4 — Funnel Analysis                   -->
+        <!-- ══════════════════════════════════════════ -->
+        <section class="step">
+            <div class="step-label"><span class="num">4</span> User Journey</div>
+            <h2>Funnel Analysis</h2>
+            
+            <p>The 7-stage marketing funnel was computed using 30-day aggregate totals, with each stage expressed as a percentage of total Impressions.</p>
+            <p>Let's start at the top of the funnel. Control begins with a significant volume advantage, serving over a million more impressions than Test. It is also more efficient at finding unique users, converting 81.1% of those impressions into reach compared to Test's 71.7%.</p>
+            <p>At the click stage, the trend reverses. Despite reaching a million fewer people, Test generates more absolute website clicks (180,970 versus 159,527). It converts 11.3% of its reached audience into clicks, nearly double the 6.0% rate for Control.</p>
+            <p>Once users arrive on the site, both groups behave similarly at first. Roughly 40% to 42% of clicks result in a product search. However, Test begins to lose momentum moving from a search to viewing a product. Control retains 87.3% of users at this step, while Test retains 76.8%.</p>
+            <p>The widest performance gap appears at the add-to-cart stage. Control successfully moves 66.9% of its content viewers into the cart phase. Test struggles heavily here, dropping to a 47.5% transition rate. This is a clear mid-funnel bottleneck for the Test campaign.</p>
+            <p>At the final step, the pattern flips one last time. Control pushes far more users to the cart, but only 40.1% of them follow through with a purchase. Test users who make it this far are highly committed, converting to buyers at 59.1%.</p>
+            <p>These opposing bottlenecks cancel each other out entirely. Control wins the mid-funnel volume, while Test wins the final closing rate. The end result is a near exact tie: 15,662 purchases for Control, and 15,637 for Test.</p>
+        </section>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP 5 — Statistical Testing               -->
+        <!-- ══════════════════════════════════════════ -->
+        <section class="step">
+            <div class="step-label"><span class="num">5</span> Inferential Stats</div>
+            <h2>Statistical Significance Testing</h2>
+            
+            <p>Because we spent more budget on the Test campaign, we naturally expect it to drive better results. To find out if it actually did, we need to test it statistically.</p>
+            <p>Every test begins with a null hypothesis. This is our baseline assumption that nothing special is happening—that the Test campaign is, in fact, no better than Control. Our goal is to see if the data is strong enough to prove that assumption is wrong.</p>
+            <p>To do this, we run each metric through a strict sequence. First, we check if the daily data follows a normal distribution (Shapiro-Wilk test). If both groups are normal, we check their variances (Levene's test) to choose the right t-test. If the data is non-normal, we default to the Mann-Whitney U test instead. Finally, because we are testing so many different metrics at once, we apply a Bonferroni correction. Every time you run a statistical test, there is a small risk of getting a false positive by pure chance. If you run enough tests, a false positive becomes almost guaranteed. The Bonferroni correction prevents this by raising the bar for what counts as significant, keeping our final results honest.</p>
+            
+            <table class="stat-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Test Used</th>
+                        <th>p-value</th>
+                        <th>Bonferroni p</th>
+                        <th>Significant?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>CTR (%)</td><td>Mann-Whitney U</td><td>0.0001</td><td>0.0013</td><td><span class="sig-yes">YES</span></td></tr>
+                    <tr><td>Reach Rate (%)</td><td>Mann-Whitney U</td><td>0.9741</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td>View Content Rate (%)</td><td>Mann-Whitney U</td><td>0.9232</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td>Add-to-Cart Rate (%)</td><td>Mann-Whitney U</td><td>0.9962</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td>Cart-to-Purchase Rate (%)</td><td>Mann-Whitney U</td><td>0.0001</td><td>0.0013</td><td><span class="sig-yes">YES</span></td></tr>
+                    <tr><td>Overall Conversion (%)</td><td>Mann-Whitney U</td><td>0.8614</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td># of Impressions</td><td>Welch's t-test</td><td>1.0000</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td>Reach</td><td>t-test</td><td>1.0000</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td># of Website Clicks</td><td>Mann-Whitney U</td><td>0.0687</td><td>0.8931</td><td class="sig-no">No</td></tr>
+                    <tr><td># of Searches</td><td>Mann-Whitney U</td><td>0.0954</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td># of View Content</td><td>t-test</td><td>0.6877</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td># of Add to Cart</td><td>Mann-Whitney U</td><td>0.9998</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                    <tr><td># of Purchase</td><td>Mann-Whitney U</td><td>0.5265</td><td>1.0000</td><td class="sig-no">No</td></tr>
+                </tbody>
+            </table>
+
+            <p>The table above details the full results of our statistical testing. After evaluating all 13 metrics and applying the Bonferroni correction, we reject the null hypothesis for only two metrics: Click-Through Rate (CTR) and Cart-to-Purchase Rate. Both demonstrate a highly significant advantage for the Test campaign.</p>
+            <p>Looking closely at the data, the Test campaign's CTR effectively doubled, rising from a daily mean of 5.08% to 10.24%. Further down the funnel, the Test campaign also proved significantly better at closing sales, converting 61.8% of cart additions into purchases compared to Control's 45.4%. Both of these findings carry a "Medium" effect size. This tells us that the difference is not just a mathematical technicality, but a meaningful behavioral shift in how users interact with the ads.</p>
+            <p>The remaining eleven metrics failed to reach statistical significance. Notably, for raw volume metrics (like Impressions and Reach) and mid-funnel metrics (like Add-to-Cart Rate), the corrected p-values equal exactly 1.000. Because our one-tailed test specifically checked if the Test campaign performed better, and Control actually generated higher daily means in these areas, the test confirms there is zero statistical evidence for a Test victory here.</p>
+        </section>
+
+        <hr class="divider">
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP 6 — Recommendations                   -->
+        <!-- ══════════════════════════════════════════ -->
+        <section class="step">
+            <div class="step-label"><span class="num">6</span> Actionable Insights</div>
+            <h2>Business Recommendations</h2>
+            
+            <div class="rec-grid">
+                <div class="rec-card">
+                    <div class="rec-num">01</div>
+                    <h4>Adopt a hybrid campaign strategy (Immediate)</h4>
+                    <p>The data shows that these two campaigns excel at opposite ends of the funnel. Because the Control campaign secures impressions at a roughly 40% lower CPM, it should be used as the primary engine for broad brand awareness and top-of-funnel reach. In contrast, the Test campaign's creatives are highly effective at driving action which generates double the CTR and significantly higher cart conversions. Therefore, the Test campaign should be redeployed specifically for middle- and bottom-funnel retargeting. In those later stages, paying a premium for high-intent clicks is justified by the superior closing rate.</p>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-num">02</div>
+                    <h4>Investigate mid-funnel leakage (Short-term)</h4>
+                    <p>Despite its exceptional CTR, the Test campaign suffers severe user drop-off immediately after the click. It loses 23.1% of users before they even view the content (compared to Control's 12.6%), and drops another 52.6% before they add an item to the cart (compared to Control's 33.1%). This pattern strongly suggests a disconnect between the ad and the landing page. We recommend an immediate UX audit of the Test campaign's post-click journey. Specifically, the team should look for slow page load times, mismatched messaging between the ad creative and the product page, or friction in the browsing layout that might be causing these motivated users to bounce.</p>
+                </div>
+            </div>
+        </section>
+        
+        <div style="text-align:center; padding: 40px 0; color:var(--light); font-size: 0.85rem;">
+            &copy; 2026 Tuan Anh Trinh. A/B Testing Data Science Portfolio Project.
+        </div>
+
+    </main>
+
+</body>
+</html>
